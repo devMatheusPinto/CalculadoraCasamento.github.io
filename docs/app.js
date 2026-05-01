@@ -85,12 +85,18 @@ function dbGetGastos(categoriaId) {
 }
 
 function dbGetResumo() {
-  const data   = dbLoad();
-  const cats   = dbGetCategorias();
-  const total_orcado    = data.gastos.reduce((s, g) => s + (g.valor || 0), 0);
-  const total_pago      = data.gastos.filter(g => g.pago).reduce((s, g) => s + (g.valor || 0), 0);
-  const total_pendente  = data.gastos.filter(g => !g.pago).reduce((s, g) => s + (g.valor || 0), 0);
+  const data  = dbLoad();
+  const cats  = dbGetCategorias();
+  const total_orcado = data.gastos.reduce((s, g) => s + (g.valor || 0), 0);
+  const total_pago   = data.gastos.filter(g => g.pago).reduce((s, g) => s + (g.valor || 0), 0);
   const orcamento_total = cats.reduce((s, c) => s + (c.orcamento || 0), 0);
+  // Pendente = soma do pendente de cada categoria (mesma lógica do painel de detalhe)
+  const total_pendente = cats.reduce((s, cat) => {
+    const p = cat.orcamento > 0
+      ? cat.orcamento - (cat.total_pago || 0)
+      : (cat.total_gasto || 0) - (cat.total_pago || 0);
+    return s + Math.max(0, p);
+  }, 0);
   return { total_orcado, total_pago, total_pendente, orcamento_total };
 }
 
