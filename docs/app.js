@@ -5,10 +5,10 @@
 
 // ── CONFIGURAÇÃO DO SUPABASE ───────────────────────
 // ATENÇÃO: Substitua os valores abaixo com as chaves do seu projeto Supabase!
-const SUPABASE_URL = 'https://qmymnqzhhdaycuxjcghr.supabase.co';
+const SUPABASE_URL = 'https://qmymnqzhhdaycuxjcghr.db.co';
 const SUPABASE_KEY = 'sb_publishable_6hFd1Dutx0ugMUmC_kSZAg_n3L81d4T';
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── STATE ──────────────────────────────────────────
 let categorias    = [];
@@ -68,7 +68,7 @@ function fmtDate(d) {
 
 async function getResumoData() {
   // Para evitar múltiplas chamadas, podemos calcular o resumo a partir dos gastos totais e categorias
-  const { data: allGastos, error: errG } = await supabase.from('gastos').select('valor, pago');
+  const { data: allGastos, error: errG } = await db.from('gastos').select('valor, pago');
   if (errG) throw errG;
   
   const total_orcado    = allGastos.reduce((s, g) => s + (g.valor || 0), 0);
@@ -87,14 +87,14 @@ async function getResumoData() {
 }
 
 async function fetchCategorias() {
-  const { data: cats, error: errC } = await supabase
+  const { data: cats, error: errC } = await db
     .from('categorias')
     .select('*')
     .order('padrao', { ascending: false })
     .order('nome', { ascending: true });
   if (errC) throw errC;
 
-  const { data: allGastos, error: errG } = await supabase
+  const { data: allGastos, error: errG } = await db
     .from('gastos')
     .select('categoria_id, valor, pago');
   if (errG) throw errG;
@@ -214,7 +214,7 @@ function renderDetailHeader() {
 // ── Load gastos ────────────────────────────────────
 async function loadGastos(catId) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('gastos')
       .select('*')
       .eq('categoria_id', catId)
@@ -279,7 +279,7 @@ async function toggleGastoStatus(g) {
     const newPago = g.pago ? false : true;
     const today   = new Date().toISOString().slice(0, 10);
     
-    const { error } = await supabase
+    const { error } = await db
       .from('gastos')
       .update({ pago: newPago, data_pagamento: newPago ? today : null })
       .eq('id', g.id);
@@ -348,11 +348,11 @@ gastoForm.addEventListener('submit', async e => {
   
   try {
     if (id) {
-      const { error } = await supabase.from('gastos').update(body).eq('id', id);
+      const { error } = await db.from('gastos').update(body).eq('id', id);
       if (error) throw error;
       toast('Gasto atualizado!');
     } else {
-      const { error } = await supabase.from('gastos').insert([body]);
+      const { error } = await db.from('gastos').insert([body]);
       if (error) throw error;
       toast('Gasto adicionado! 🎉');
     }
@@ -398,7 +398,7 @@ catForm.addEventListener('submit', async e => {
   
   try {
     if (id) {
-      const { error } = await supabase.from('categorias').update({ nome, icone, orcamento }).eq('id', id);
+      const { error } = await db.from('categorias').update({ nome, icone, orcamento }).eq('id', id);
       if (error) throw error;
       toast(`Categoria "${nome}" atualizada! ✏️`);
       if (currentCat?.id === parseInt(id)) {
@@ -406,7 +406,7 @@ catForm.addEventListener('submit', async e => {
         renderDetailHeader();
       }
     } else {
-      const { error } = await supabase.from('categorias').insert([{ nome, icone, orcamento, padrao: 0 }]);
+      const { error } = await db.from('categorias').insert([{ nome, icone, orcamento, padrao: 0 }]);
       if (error) throw error;
       toast(`Categoria "${nome}" criada!`);
     }
@@ -441,7 +441,7 @@ budgetForm.addEventListener('submit', async e => {
   const val = parseFloat(document.getElementById('budgetValor').value) || 0;
   
   try {
-    const { error } = await supabase.from('categorias').update({ orcamento: val }).eq('id', id);
+    const { error } = await db.from('categorias').update({ orcamento: val }).eq('id', id);
     if (error) throw error;
     
     toast('Orçamento atualizado!');
@@ -474,7 +474,7 @@ document.getElementById('confirmDelete').addEventListener('click', async () => {
 function confirmDeleteGasto(id) {
   openConfirm('Tem certeza que deseja excluir este gasto? Esta ação não pode ser desfeita.', async () => {
     try {
-      const { error } = await supabase.from('gastos').delete().eq('id', id);
+      const { error } = await db.from('gastos').delete().eq('id', id);
       if (error) throw error;
       toast('Gasto excluído');
       await refreshAll();
@@ -497,7 +497,7 @@ document.addEventListener('keydown', e => {
 
 // Escuta por mudanças em tempo real (Opcional, para sincronia instantânea)
 if (SUPABASE_URL !== 'SUA_URL_AQUI') {
-  supabase
+  db
     .channel('public:gastos')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'gastos' }, () => {
       // Pequeno debounce caso a gente mesmo tenha feito a alteração
