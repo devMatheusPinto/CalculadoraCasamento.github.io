@@ -1,0 +1,214 @@
+{
+  "nextCatId": 23,
+  "nextGastoId": 7,
+  "categorias": [
+    {
+      "id": 1,
+      "nome": "Cartório",
+      "icone": "🏛️",
+      "orcamento": 1000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 2,
+      "nome": "Cerimonialista",
+      "icone": "👰",
+      "orcamento": 3300,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 3,
+      "nome": "Banda",
+      "icone": "🎵",
+      "orcamento": 3000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 4,
+      "nome": "DJ",
+      "icone": "🎧",
+      "orcamento": 2000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 5,
+      "nome": "Buffet",
+      "icone": "🍽️",
+      "orcamento": 10000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 6,
+      "nome": "Bebidas",
+      "icone": "🥂",
+      "orcamento": 5000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 7,
+      "nome": "Bar",
+      "icone": "🍹",
+      "orcamento": 1500,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 8,
+      "nome": "Garçom",
+      "icone": "🤵",
+      "orcamento": 2000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 9,
+      "nome": "Som",
+      "icone": "🔊",
+      "orcamento": 1500,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 10,
+      "nome": "Lustre da Pista de Dança",
+      "icone": "✨",
+      "orcamento": 2000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 11,
+      "nome": "Salão de Festa",
+      "icone": "🏰",
+      "orcamento": 4000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 12,
+      "nome": "Pré-Wedding",
+      "icone": "📸",
+      "orcamento": 2000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 13,
+      "nome": "Fotógrafo",
+      "icone": "🎬",
+      "orcamento": 3870,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 14,
+      "nome": "Decoração",
+      "icone": "💐",
+      "orcamento": 5000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 15,
+      "nome": "Igreja",
+      "icone": "⛪",
+      "orcamento": 1000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 16,
+      "nome": "Músicos da Igreja",
+      "icone": "🎶",
+      "orcamento": 2000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 17,
+      "nome": "Vestido (Noiva e Daminhas)",
+      "icone": "👗",
+      "orcamento": 10000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 18,
+      "nome": "Terno",
+      "icone": "🤵",
+      "orcamento": 5000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 19,
+      "nome": "Convite dos Padrinhos",
+      "icone": "💌",
+      "orcamento": 2000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 20,
+      "nome": "Convites Gerais",
+      "icone": "📨",
+      "orcamento": 1000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 21,
+      "nome": "Lembranças",
+      "icone": "🎁",
+      "orcamento": 3000,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    },
+    {
+      "id": 22,
+      "nome": "Transfer",
+      "icone": "🚌",
+      "orcamento": 1500,
+      "criado_em": "2026-04-11 18:28:59",
+      "padrao": 1
+    }
+  ],
+  "gastos": [
+    {
+      "id": 4,
+      "categoria_id": 11,
+      "descricao": "Pagamento total",
+      "valor": 4000,
+      "pago": 1,
+      "data_pagamento": null,
+      "notas": "Pix feito no dia 18/04/26.",
+      "criado_em": "2026-04-18 16:09:51"
+    },
+    {
+      "id": 5,
+      "categoria_id": 2,
+      "descricao": "Sinal da contratação",
+      "valor": 900,
+      "pago": 1,
+      "data_pagamento": "2026-04-20",
+      "notas": "",
+      "criado_em": "2026-04-21 17:50:59"
+    },
+    {
+      "id": 6,
+      "categoria_id": 13,
+      "descricao": "Entrada",
+      "valor": 1930,
+      "pago": 1,
+      "data_pagamento": "2026-04-30",
+      "notas": "Entrada de 50% do valor.",
+      "criado_em": "2026-05-01 09:13:22"
+    }
+  ]
+}

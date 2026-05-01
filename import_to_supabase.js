@@ -2,8 +2,8 @@ const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 
 // Substitua com as suas chaves do Supabase
-const SUPABASE_URL = 'SUA_URL_AQUI';
-const SUPABASE_KEY = 'SUA_KEY_AQUI';
+const SUPABASE_URL = 'https://qmymnqzhhdaycuxjcghr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_6hFd1Dutx0ugMUmC_kSZAg_n3L81d4T';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -13,20 +13,24 @@ async function importar() {
     return;
   }
 
-  console.log('Lendo backup local...');
+  console.log('Lendo backup recuperado...');
   let data;
   try {
-    const raw = fs.readFileSync('meu-backup-casamento.json', 'utf8');
+    const raw = fs.readFileSync('meu-backup-recuperado.json', 'utf8');
     data = JSON.parse(raw);
   } catch (e) {
-    console.error('Erro ao ler meu-backup-casamento.json', e.message);
+    console.error('Erro ao ler meu-backup-recuperado.json', e.message);
     return;
   }
 
-  const categorias = data.categorias;
-  const gastos = data.gastos;
+  const categorias = data.categorias || [];
+  const gastos = data.gastos || [];
 
   console.log(`Lidas ${categorias.length} categorias e ${gastos.length} gastos.`);
+
+  console.log('Limpando dados antigos da nuvem...');
+  // Apaga todas as categorias (que apaga os gastos por CASCADE)
+  await supabase.from('categorias').delete().neq('id', -1);
 
   // 1. Inserir Categorias
   console.log('Enviando categorias para o Supabase...');
@@ -40,7 +44,7 @@ async function importar() {
       criado_em: cat.criado_em || new Date().toISOString()
     }]);
     
-    if (error && error.code !== '23505') { // Ignora erro de duplicidade se já existir
+    if (error) { 
       console.error(`Erro ao inserir categoria ${cat.nome}:`, error.message);
     }
   }
@@ -59,12 +63,12 @@ async function importar() {
       criado_em: g.criado_em || new Date().toISOString()
     }]);
 
-    if (error && error.code !== '23505') {
+    if (error) {
       console.error(`Erro ao inserir gasto ${g.descricao}:`, error.message);
     }
   }
 
-  console.log('✅ Importação concluída com sucesso!');
+  console.log('✅ Dados recuperados com sucesso!');
 }
 
 importar();

@@ -506,26 +506,6 @@ if (SUPABASE_URL !== 'SUA_URL_AQUI') {
     .subscribe();
 }
 
-// ═══ RECUPERAÇÃO DE DADOS LOCAIS ══════════════════
-(function recoverLocalData() {
-  const raw = localStorage.getItem('casamento_db');
-  if (raw) {
-    try {
-      const blob = new Blob([raw], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'meu-backup-recuperado.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      localStorage.setItem('casamento_db_backup', raw);
-      localStorage.removeItem('casamento_db');
-      toast('Backup local recuperado e baixado! 📥', 'success');
-    } catch (e) {
-      console.error('Erro na recuperação', e);
-    }
-  }
-})();
 
 // ═══ INIT ══════════════════════════════════════════
 loadCategorias();
