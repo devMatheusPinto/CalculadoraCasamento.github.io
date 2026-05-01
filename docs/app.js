@@ -90,9 +90,9 @@ function dbGetResumo() {
   const total_orcado    = data.gastos.reduce((s, g) => s + (g.valor || 0), 0);
   const total_pago      = data.gastos.filter(g => g.pago).reduce((s, g) => s + (g.valor || 0), 0);
   const total_pendente  = cats.reduce((s, cat) => {
-    const pendenteCat = cat.orcamento > 0
+    const pendenteCat = Math.max(0, cat.orcamento > 0
       ? cat.orcamento - (cat.total_pago || 0)
-      : (cat.total_gasto || 0) - (cat.total_pago || 0);
+      : (cat.total_gasto || 0) - (cat.total_pago || 0));
     return s + pendenteCat;
   }, 0);
   const orcamento_total = cats.reduce((s, c) => s + (c.orcamento || 0), 0);
@@ -293,9 +293,9 @@ function renderDetailHeader() {
   if (!cat) return;
   detailIcon.textContent = cat.icone;
   detailName.textContent = cat.nome;
-  const pendente = cat.orcamento > 0
+  const pendente = Math.max(0, cat.orcamento > 0
     ? cat.orcamento - (cat.total_pago || 0)
-    : (cat.total_gasto || 0) - (cat.total_pago || 0);
+    : (cat.total_gasto || 0) - (cat.total_pago || 0));
   detailStats.textContent = `${cat.num_itens || 0} item(s) · Pago: ${fmt(cat.total_pago)} · Pendente: ${fmt(pendente)}`;
 
   if (cat.orcamento > 0) {
