@@ -1,175 +1,16 @@
 /* ═══════════════════════════════════════════════════
    Casamento Scarlet & Matheus — Frontend Logic
-   (Versão estática / localStorage — GitHub Pages)
+   (Versão com Supabase na Nuvem)
    ═══════════════════════════════════════════════════ */
 
-// ── Default Categories ─────────────────────────────
-const DEFAULT_CATEGORIES = [
-  { nome: 'Cartório', icone: '🏛️' },
-  { nome: 'Cerimonialista', icone: '👰' },
-  { nome: 'Banda', icone: '🎵' },
-  { nome: 'DJ', icone: '🎧' },
-  { nome: 'Buffet', icone: '🍽️' },
-  { nome: 'Bebidas', icone: '🥂' },
-  { nome: 'Bar', icone: '🍹' },
-  { nome: 'Garçom', icone: '🤵' },
-  { nome: 'Som', icone: '🔊' },
-  { nome: 'Lustre da Pista de Dança', icone: '✨' },
-  { nome: 'Salão de Festa', icone: '🏰' },
-  { nome: 'Pré-Wedding', icone: '📸' },
-  { nome: 'Foto/Filmagem', icone: '🎬' },
-  { nome: 'Decoração', icone: '💐' },
-  { nome: 'Igreja', icone: '⛪' },
-  { nome: 'Músicos da Igreja', icone: '🎶' },
-  { nome: 'Vestido (Noiva e Daminhas)', icone: '👗' },
-  { nome: 'Terno', icone: '🤵' },
-  { nome: 'Convite dos Padrinhos', icone: '💌' },
-  { nome: 'Convites Gerais', icone: '📨' },
-  { nome: 'Lembranças', icone: '🎁' },
-  { nome: 'Transfer', icone: '🚌' },
-];
+// ── CONFIGURAÇÃO DO SUPABASE ───────────────────────
+// ATENÇÃO: Substitua os valores abaixo com as chaves do seu projeto Supabase!
+const SUPABASE_URL = 'SUA_URL_AQUI';
+const SUPABASE_KEY = 'SUA_KEY_AQUI';
 
-const DB_KEY = 'casamento_db';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ══════════════════════════════════════════════════════
-//  DATABASE LAYER (localStorage)
-// ══════════════════════════════════════════════════════
-
-function dbLoad() {
-  try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) { /* corrupt data — reinitialize */ }
-
-  const now = new Date().toISOString();
-  const data = {
-    nextCatId: DEFAULT_CATEGORIES.length + 1,
-    nextGastoId: 1,
-    categorias: DEFAULT_CATEGORIES.map((c, i) => ({
-      id: i + 1,
-      nome: c.nome,
-      icone: c.icone,
-      orcamento: 0,
-      padrao: 1,
-      criado_em: now,
-    })),
-    gastos: [],
-  };
-  dbSave(data);
-  return data;
-}
-
-function dbSave(data) {
-  localStorage.setItem(DB_KEY, JSON.stringify(data));
-}
-
-function dbGetCategorias() {
-  const data = dbLoad();
-  return data.categorias
-    .slice()
-    .sort((a, b) => b.padrao - a.padrao || a.nome.localeCompare(b.nome, 'pt-BR'))
-    .map(cat => {
-      const catGastos = data.gastos.filter(g => g.categoria_id === cat.id);
-      const total_gasto = catGastos.reduce((s, g) => s + (g.valor || 0), 0);
-      const total_pago  = catGastos.filter(g => g.pago).reduce((s, g) => s + (g.valor || 0), 0);
-      return { ...cat, total_gasto, total_pago, num_itens: catGastos.length };
-    });
-}
-
-function dbGetGastos(categoriaId) {
-  const data = dbLoad();
-  const list = categoriaId
-    ? data.gastos.filter(g => g.categoria_id === categoriaId)
-    : data.gastos;
-  return list.slice().sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
-}
-
-function dbGetResumo() {
-  const data   = dbLoad();
-  const cats   = dbGetCategorias();
-  const total_orcado    = data.gastos.reduce((s, g) => s + (g.valor || 0), 0);
-  const total_pago      = data.gastos.filter(g => g.pago).reduce((s, g) => s + (g.valor || 0), 0);
-  const total_pendente  = cats.reduce((s, cat) => {
-    const pendenteCat = Math.max(0, cat.orcamento > 0
-      ? cat.orcamento - (cat.total_pago || 0)
-      : (cat.total_gasto || 0) - (cat.total_pago || 0));
-    return s + pendenteCat;
-  }, 0);
-  const orcamento_total = cats.reduce((s, c) => s + (c.orcamento || 0), 0);
-  return { total_orcado, total_pago, total_pendente, orcamento_total };
-}
-
-function dbCreateCategoria(nome, icone, orcamento) {
-  const data = dbLoad();
-  if (data.categorias.find(c => c.nome.trim().toLowerCase() === nome.trim().toLowerCase())) {
-    throw new Error('Categoria já existe');
-  }
-  const cat = {
-    id: data.nextCatId++,
-    nome: nome.trim(),
-    icone: icone || '💍',
-    orcamento: orcamento || 0,
-    padrao: 0,
-    criado_em: new Date().toISOString(),
-  };
-  data.categorias.push(cat);
-  dbSave(data);
-  return cat;
-}
-
-function dbUpdateCategoria(id, fields) {
-  const data = dbLoad();
-  const idx = data.categorias.findIndex(c => c.id === id);
-  if (idx === -1) throw new Error('Não encontrado');
-  data.categorias[idx] = { ...data.categorias[idx], ...fields };
-  dbSave(data);
-  return data.categorias[idx];
-}
-
-function dbDeleteCategoria(id) {
-  const data = dbLoad();
-  data.categorias = data.categorias.filter(c => c.id !== id);
-  data.gastos     = data.gastos.filter(g => g.categoria_id !== id);
-  dbSave(data);
-}
-
-function dbCreateGasto(fields) {
-  const data  = dbLoad();
-  const gasto = {
-    id: data.nextGastoId++,
-    categoria_id:   fields.categoria_id,
-    descricao:      fields.descricao,
-    valor:          fields.valor,
-    pago:           fields.pago ? 1 : 0,
-    data_pagamento: fields.data_pagamento || null,
-    notas:          fields.notas || '',
-    criado_em:      new Date().toISOString(),
-  };
-  data.gastos.push(gasto);
-  dbSave(data);
-  return gasto;
-}
-
-function dbUpdateGasto(id, fields) {
-  const data = dbLoad();
-  const idx  = data.gastos.findIndex(g => g.id === id);
-  if (idx === -1) throw new Error('Não encontrado');
-  const updated = { ...data.gastos[idx], ...fields };
-  if ('pago' in fields) updated.pago = fields.pago ? 1 : 0;
-  data.gastos[idx] = updated;
-  dbSave(data);
-  return updated;
-}
-
-function dbDeleteGasto(id) {
-  const data = dbLoad();
-  data.gastos = data.gastos.filter(g => g.id !== id);
-  dbSave(data);
-}
-
-// ══════════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════════
+// ── STATE ──────────────────────────────────────────
 let categorias    = [];
 let currentCat    = null;
 let gastos        = [];
@@ -223,26 +64,83 @@ function fmtDate(d) {
   document.getElementById('headerDate').textContent = now.toLocaleDateString('pt-BR', opts);
 })();
 
+// ── Data Fetching ──────────────────────────────────
+
+async function getResumoData() {
+  // Para evitar múltiplas chamadas, podemos calcular o resumo a partir dos gastos totais e categorias
+  const { data: allGastos, error: errG } = await supabase.from('gastos').select('valor, pago');
+  if (errG) throw errG;
+  
+  const total_orcado    = allGastos.reduce((s, g) => s + (g.valor || 0), 0);
+  const total_pago      = allGastos.filter(g => g.pago).reduce((s, g) => s + (g.valor || 0), 0);
+  
+  const total_pendente  = categorias.reduce((s, cat) => {
+    const pendenteCat = Math.max(0, cat.orcamento > 0
+      ? cat.orcamento - (cat.total_pago || 0)
+      : (cat.total_gasto || 0) - (cat.total_pago || 0));
+    return s + pendenteCat;
+  }, 0);
+  
+  const orcamento_total = categorias.reduce((s, c) => s + (c.orcamento || 0), 0);
+  
+  return { total_orcado, total_pago, total_pendente, orcamento_total };
+}
+
+async function fetchCategorias() {
+  const { data: cats, error: errC } = await supabase
+    .from('categorias')
+    .select('*')
+    .order('padrao', { ascending: false })
+    .order('nome', { ascending: true });
+  if (errC) throw errC;
+
+  const { data: allGastos, error: errG } = await supabase
+    .from('gastos')
+    .select('categoria_id, valor, pago');
+  if (errG) throw errG;
+
+  return cats.map(cat => {
+    const catGastos = allGastos.filter(g => g.categoria_id === cat.id);
+    const total_gasto = catGastos.reduce((s, g) => s + (g.valor || 0), 0);
+    const total_pago  = catGastos.filter(g => g.pago).reduce((s, g) => s + (g.valor || 0), 0);
+    return { ...cat, total_gasto, total_pago, num_itens: catGastos.length };
+  });
+}
+
 // ── Load summary ───────────────────────────────────
-function loadSummary() {
-  const s    = dbGetResumo();
-  sumTotal.textContent    = fmt(s.orcamento_total);
-  sumPago.textContent     = fmt(s.total_pago);
-  sumPendente.textContent = fmt(s.total_pendente);
-  const base = s.orcamento_total > 0 ? s.orcamento_total : s.total_orcado;
-  const pct  = base > 0 ? Math.min(100, (s.total_pago / base) * 100) : 0;
-  sumProgress.textContent = pct.toFixed(0) + '%';
-  progBar.style.width = pct + '%';
+async function loadSummary() {
+  try {
+    const s = await getResumoData();
+    sumTotal.textContent    = fmt(s.orcamento_total);
+    sumPago.textContent     = fmt(s.total_pago);
+    sumPendente.textContent = fmt(s.total_pendente);
+    const base = s.orcamento_total > 0 ? s.orcamento_total : s.total_orcado;
+    const pct  = base > 0 ? Math.min(100, (s.total_pago / base) * 100) : 0;
+    sumProgress.textContent = pct.toFixed(0) + '%';
+    progBar.style.width = pct + '%';
+  } catch (e) {
+    console.error('Erro ao carregar resumo:', e);
+  }
 }
 
 // ── Load categories ────────────────────────────────
-function loadCategorias() {
-  categorias = dbGetCategorias();
-  renderCategorias();
-  loadSummary();
-  if (currentCat) {
-    const updated = categorias.find(c => c.id === currentCat.id);
-    if (updated) { currentCat = updated; renderDetailHeader(); }
+async function loadCategorias() {
+  try {
+    if (SUPABASE_URL === 'SUA_URL_AQUI') {
+      toast('Configure as chaves do Supabase no código!', 'error');
+      return;
+    }
+
+    categorias = await fetchCategorias();
+    renderCategorias();
+    await loadSummary();
+    if (currentCat) {
+      const updated = categorias.find(c => c.id === currentCat.id);
+      if (updated) { currentCat = updated; renderDetailHeader(); }
+    }
+  } catch (e) {
+    toast('Erro ao carregar categorias', 'error');
+    console.error(e);
   }
 }
 
@@ -279,13 +177,13 @@ function renderCategorias() {
 }
 
 // ── Select category ────────────────────────────────
-function selectCategory(cat) {
+async function selectCategory(cat) {
   currentCat = cat;
   renderCategorias();
   emptyState.classList.add('hidden');
   detailContent.classList.remove('hidden');
   renderDetailHeader();
-  loadGastos(cat.id);
+  await loadGastos(cat.id);
 }
 
 function renderDetailHeader() {
@@ -314,9 +212,21 @@ function renderDetailHeader() {
 }
 
 // ── Load gastos ────────────────────────────────────
-function loadGastos(catId) {
-  gastos = dbGetGastos(catId);
-  renderGastos();
+async function loadGastos(catId) {
+  try {
+    const { data, error } = await supabase
+      .from('gastos')
+      .select('*')
+      .eq('categoria_id', catId)
+      .order('criado_em', { ascending: false });
+    
+    if (error) throw error;
+    gastos = data;
+    renderGastos();
+  } catch (e) {
+    toast('Erro ao carregar gastos', 'error');
+    console.error(e);
+  }
 }
 
 function renderGastos() {
@@ -364,23 +274,33 @@ function renderGastos() {
 }
 
 // ── Toggle payment status ──────────────────────────
-function toggleGastoStatus(g) {
+async function toggleGastoStatus(g) {
   try {
-    const newPago = g.pago ? 0 : 1;
+    const newPago = g.pago ? false : true;
     const today   = new Date().toISOString().slice(0, 10);
-    dbUpdateGasto(g.id, { pago: newPago, data_pagamento: newPago ? today : null });
+    
+    const { error } = await supabase
+      .from('gastos')
+      .update({ pago: newPago, data_pagamento: newPago ? today : null })
+      .eq('id', g.id);
+      
+    if (error) throw error;
+
     toast(newPago ? 'Marcado como pago 🎉' : 'Marcado como pendente');
-    refreshAll();
-  } catch (e) { toast(e.message, 'error'); }
+    await refreshAll();
+  } catch (e) {
+    toast('Erro ao atualizar status', 'error');
+    console.error(e);
+  }
 }
 
 // ── Refresh everything ─────────────────────────────
-function refreshAll() {
-  loadCategorias();
+async function refreshAll() {
+  await loadCategorias();
   if (currentCat) {
     const updated = categorias.find(c => c.id === currentCat.id);
     if (updated) currentCat = updated;
-    loadGastos(currentCat.id);
+    await loadGastos(currentCat.id);
     renderDetailHeader();
   }
 }
@@ -408,7 +328,7 @@ document.getElementById('closeGastoModal').addEventListener('click', closeGastoM
 document.getElementById('cancelGasto').addEventListener('click', closeGastoModal);
 gastoModal.addEventListener('click', e => { if (e.target === gastoModal) closeGastoModal(); });
 
-gastoForm.addEventListener('submit', e => {
+gastoForm.addEventListener('submit', async e => {
   e.preventDefault();
   const id    = document.getElementById('gastoId').value;
   const catId = parseInt(document.getElementById('gastoCategoriaId').value);
@@ -420,18 +340,28 @@ gastoForm.addEventListener('submit', e => {
     data_pagamento: document.getElementById('gastoData').value || null,
     notas:          document.getElementById('gastoNotas').value.trim(),
   };
-  if (!body.descricao || isNaN(body.valor)) { toast('Preencha os campos obrigatórios', 'error'); return; }
+  
+  if (!body.descricao || isNaN(body.valor)) {
+    toast('Preencha os campos obrigatórios', 'error');
+    return;
+  }
+  
   try {
     if (id) {
-      dbUpdateGasto(parseInt(id), body);
+      const { error } = await supabase.from('gastos').update(body).eq('id', id);
+      if (error) throw error;
       toast('Gasto atualizado!');
     } else {
-      dbCreateGasto(body);
+      const { error } = await supabase.from('gastos').insert([body]);
+      if (error) throw error;
       toast('Gasto adicionado! 🎉');
     }
     closeGastoModal();
-    refreshAll();
-  } catch (err) { toast(err.message, 'error'); }
+    await refreshAll();
+  } catch (err) {
+    toast('Erro ao salvar gasto', 'error');
+    console.error(err);
+  }
 });
 
 document.getElementById('btnAddGasto').addEventListener('click', () => openGastoModal());
@@ -457,29 +387,36 @@ document.getElementById('closeCatModal').addEventListener('click', () => catModa
 document.getElementById('cancelCat').addEventListener('click', () => catModal.classList.add('hidden'));
 catModal.addEventListener('click', e => { if (e.target === catModal) catModal.classList.add('hidden'); });
 
-catForm.addEventListener('submit', e => {
+catForm.addEventListener('submit', async e => {
   e.preventDefault();
   const id        = document.getElementById('catId').value;
   const nome      = document.getElementById('catNome').value.trim();
   const icone     = document.getElementById('catIcone').value.trim() || '💍';
   const orcamento = parseFloat(document.getElementById('catOrcamento').value) || 0;
+  
   if (!nome) { toast('Informe o nome da categoria', 'error'); return; }
+  
   try {
     if (id) {
-      dbUpdateCategoria(parseInt(id), { nome, icone, orcamento });
+      const { error } = await supabase.from('categorias').update({ nome, icone, orcamento }).eq('id', id);
+      if (error) throw error;
       toast(`Categoria "${nome}" atualizada! ✏️`);
       if (currentCat?.id === parseInt(id)) {
         currentCat = { ...currentCat, nome, icone, orcamento };
         renderDetailHeader();
       }
     } else {
-      dbCreateCategoria(nome, icone, orcamento);
+      const { error } = await supabase.from('categorias').insert([{ nome, icone, orcamento, padrao: 0 }]);
+      if (error) throw error;
       toast(`Categoria "${nome}" criada!`);
     }
     catModal.classList.add('hidden');
     catForm.reset();
-    loadCategorias();
-  } catch (err) { toast(err.message, 'error'); }
+    await loadCategorias();
+  } catch (err) {
+    toast('Erro ao salvar categoria', 'error');
+    console.error(err);
+  }
 });
 
 // ═══ BUDGET MODAL ══════════════════════════════════
@@ -498,16 +435,22 @@ document.getElementById('closeBudgetModal').addEventListener('click', () => budg
 document.getElementById('cancelBudget').addEventListener('click', () => budgetModal.classList.add('hidden'));
 budgetModal.addEventListener('click', e => { if (e.target === budgetModal) budgetModal.classList.add('hidden'); });
 
-budgetForm.addEventListener('submit', e => {
+budgetForm.addEventListener('submit', async e => {
   e.preventDefault();
   const id  = parseInt(document.getElementById('budgetCatId').value);
   const val = parseFloat(document.getElementById('budgetValor').value) || 0;
+  
   try {
-    dbUpdateCategoria(id, { orcamento: val });
+    const { error } = await supabase.from('categorias').update({ orcamento: val }).eq('id', id);
+    if (error) throw error;
+    
     toast('Orçamento atualizado!');
     budgetModal.classList.add('hidden');
-    refreshAll();
-  } catch (err) { toast(err.message, 'error'); }
+    await refreshAll();
+  } catch (err) {
+    toast('Erro ao atualizar orçamento', 'error');
+    console.error(err);
+  }
 });
 
 // ═══ CONFIRM DELETE ════════════════════════════════
@@ -523,66 +466,26 @@ function closeConfirm() { confirmModal.classList.add('hidden'); deleteCallback =
 document.getElementById('closeConfirmModal').addEventListener('click', closeConfirm);
 document.getElementById('cancelConfirm').addEventListener('click', closeConfirm);
 confirmModal.addEventListener('click', e => { if (e.target === confirmModal) closeConfirm(); });
-document.getElementById('confirmDelete').addEventListener('click', () => {
-  if (deleteCallback) deleteCallback();
+document.getElementById('confirmDelete').addEventListener('click', async () => {
+  if (deleteCallback) await deleteCallback();
   closeConfirm();
 });
 
 function confirmDeleteGasto(id) {
-  openConfirm('Tem certeza que deseja excluir este gasto? Esta ação não pode ser desfeita.', () => {
+  openConfirm('Tem certeza que deseja excluir este gasto? Esta ação não pode ser desfeita.', async () => {
     try {
-      dbDeleteGasto(id);
+      const { error } = await supabase.from('gastos').delete().eq('id', id);
+      if (error) throw error;
       toast('Gasto excluído');
-      refreshAll();
-    } catch (err) { toast(err.message, 'error'); }
+      await refreshAll();
+    } catch (err) {
+      toast('Erro ao excluir', 'error');
+      console.error(err);
+    }
   });
 }
 
-// ═══ EXPORT / IMPORT ═══════════════════════════════
-function exportData() {
-  const data = dbLoad();
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  const date = new Date().toISOString().slice(0, 10);
-  a.href     = url;
-  a.download = `casamento-backup-${date}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('Backup exportado! 📥');
-}
-
-function importData(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!data.categorias || !data.gastos) throw new Error('Arquivo inválido');
-      dbSave(data);
-      currentCat = null;
-      emptyState.classList.remove('hidden');
-      detailContent.classList.add('hidden');
-      loadCategorias();
-      toast('Dados importados com sucesso! 🎉');
-    } catch (err) {
-      toast('Erro ao importar: arquivo inválido', 'error');
-    }
-  };
-  reader.readAsText(file);
-}
-
-document.getElementById('btnExport').addEventListener('click', exportData);
-document.getElementById('btnImport').addEventListener('click', () => {
-  document.getElementById('importFileInput').click();
-});
-document.getElementById('importFileInput').addEventListener('change', e => {
-  importData(e.target.files[0]);
-  e.target.value = ''; // reset so same file can be re-imported
-});
-
-// ═══ KEYBOARD ══════════════════════════════════════
+// ═══ KEYBOARD E REALTIME ══════════════════════════
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (!gastoModal.classList.contains('hidden'))    closeGastoModal();
@@ -591,6 +494,17 @@ document.addEventListener('keydown', e => {
     else if (!confirmModal.classList.contains('hidden')) closeConfirm();
   }
 });
+
+// Escuta por mudanças em tempo real (Opcional, para sincronia instantânea)
+if (SUPABASE_URL !== 'SUA_URL_AQUI') {
+  supabase
+    .channel('public:gastos')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'gastos' }, () => {
+      // Pequeno debounce caso a gente mesmo tenha feito a alteração
+      setTimeout(refreshAll, 500);
+    })
+    .subscribe();
+}
 
 // ═══ INIT ══════════════════════════════════════════
 loadCategorias();

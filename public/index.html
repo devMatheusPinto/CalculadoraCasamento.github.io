@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -23,13 +25,8 @@
       </div>
       <div class="header-right">
         <div class="header-date" id="headerDate"></div>
-        <div class="header-actions">
-          <button class="btn btn-ghost btn-sm" id="btnImport" title="Importar backup JSON">📤 Importar</button>
-          <button class="btn btn-ghost btn-sm" id="btnExport" title="Exportar backup JSON">📥 Exportar</button>
-        </div>
       </div>
     </div>
-    <input type="file" id="importFileInput" accept=".json" class="hidden" aria-hidden="true" />
   </header>
 
   <!-- SUMMARY CARDS -->
