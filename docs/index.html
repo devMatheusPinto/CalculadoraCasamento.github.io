@@ -248,6 +248,12 @@
   <!-- Toast -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="app.js?v=3"></script>
+  <!-- Global Error Handler for Debugging -->
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      alert("ERRO NO SITE: " + message + " na linha " + lineno);
+    };
+  </script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
