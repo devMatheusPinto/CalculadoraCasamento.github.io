@@ -288,12 +288,10 @@ function renderDetailHeader() {
   if (!cat) return;
   detailIcon.textContent = cat.icone;
   detailName.textContent = cat.nome;
-  const pendente  = (cat.total_gasto || 0) - (cat.total_pago || 0);
-  const restante  = cat.orcamento > 0 ? cat.orcamento - (cat.total_gasto || 0) : null;
-  const restanteStr = restante !== null
-    ? ` · Restante: ${fmt(restante)}`
-    : ' · Sem orçamento definido';
-  detailStats.textContent = `${cat.num_itens || 0} item(s) · Pago: ${fmt(cat.total_pago)} · Pendente: ${fmt(pendente)}${restanteStr}`;
+  const pendente = cat.orcamento > 0
+    ? cat.orcamento - (cat.total_pago || 0)
+    : (cat.total_gasto || 0) - (cat.total_pago || 0);
+  detailStats.textContent = `${cat.num_itens || 0} item(s) · Pago: ${fmt(cat.total_pago)} · Pendente: ${fmt(pendente)}`;
 
   if (cat.orcamento > 0) {
     budgetLabel.textContent = fmt(cat.orcamento);
