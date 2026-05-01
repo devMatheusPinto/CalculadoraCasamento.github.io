@@ -5,8 +5,8 @@
 
 // ── CONFIGURAÇÃO DO SUPABASE ───────────────────────
 // ATENÇÃO: Substitua os valores abaixo com as chaves do seu projeto Supabase!
-const SUPABASE_URL = 'SUA_URL_AQUI';
-const SUPABASE_KEY = 'SUA_KEY_AQUI';
+const SUPABASE_URL = 'https://qmymnqzhhdaycuxjcghr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_6hFd1Dutx0ugMUmC_kSZAg_n3L81d4T';
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
