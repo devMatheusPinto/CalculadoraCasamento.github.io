@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Controle de gastos do casamento de Scarlet e Matheus — organize e acompanhe todas as despesas do grande dia." />
+  <title>💍 Casamento · Scarlet & Matheus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <span class="brand-ring">💍</span>
+        <div>
+          <h1 class="brand-title">Scarlet &amp; Matheus</h1>
+          <p class="brand-sub">Controle de Gastos do Casamento</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-date" id="headerDate"></div>
+        <div class="header-actions">
+          <button class="btn btn-ghost btn-sm" id="btnImport" title="Importar backup JSON">📤 Importar</button>
+          <button class="btn btn-ghost btn-sm" id="btnExport" title="Exportar backup JSON">📥 Exportar</button>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="importFileInput" accept=".json" class="hidden" aria-hidden="true" />
+  </header>
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-section" aria-label="Resumo financeiro">
+    <div class="summary-grid">
+      <div class="card summary-card card--total">
+        <div class="card-icon">💎</div>
+        <div class="card-body">
+          <span class="card-label">Total Orçado</span>
+          <span class="card-value" id="sumTotal">R$ 0,00</span>
+        </div>
+      </div>
+      <div class="card summary-card card--pago">
+        <div class="card-icon">✅</div>
+        <div class="card-body">
+          <span class="card-label">Total Pago</span>
+          <span class="card-value" id="sumPago">R$ 0,00</span>
+        </div>
+      </div>
+      <div class="card summary-card card--pendente">
+        <div class="card-icon">⏳</div>
+        <div class="card-body">
+          <span class="card-label">A Pagar</span>
+          <span class="card-value" id="sumPendente">R$ 0,00</span>
+        </div>
+      </div>
+      <div class="card summary-card card--progress">
+        <div class="card-icon">📊</div>
+        <div class="card-body">
+          <span class="card-label">Progresso</span>
+          <span class="card-value" id="sumProgress">0%</span>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- SIDEBAR: Category List -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">Categorias</h2>
+        <button class="btn btn-ghost btn-sm" id="btnAddCategory" title="Nova categoria">
+          <span>＋</span>
+        </button>
+      </div>
+      <ul class="category-list" id="categoryList" role="listbox" aria-label="Lista de categorias">
+        <!-- populated by JS -->
+      </ul>
+    </aside>
+
+    <!-- DETAIL PANEL -->
+    <section class="detail-panel" id="detailPanel" aria-live="polite">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">💐</div>
+        <p class="empty-title">Selecione uma categoria</p>
+        <p class="empty-sub">Escolha uma categoria ao lado para ver e gerenciar seus gastos.</p>
+      </div>
+
+      <div class="detail-content hidden" id="detailContent">
+        <div class="detail-header">
+          <div class="detail-title-row">
+            <span class="detail-icon" id="detailIcon"></span>
+            <div>
+              <h2 class="detail-name" id="detailName"></h2>
+              <p class="detail-stats" id="detailStats"></p>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <button class="btn btn-secondary btn-sm" id="btnEditBudget">Definir Orçamento</button>
+            <button class="btn btn-primary" id="btnAddGasto">＋ Adicionar Gasto</button>
+          </div>
+        </div>
+
+        <!-- Budget bar -->
+        <div class="budget-bar-section" id="budgetBarSection">
+          <div class="budget-labels">
+            <span>Orçamento: <strong id="budgetLabel">—</strong></span>
+            <span id="budgetUsedLabel"></span>
+          </div>
+          <div class="progress-bar-wrap budget-progress-wrap">
+            <div class="progress-bar budget-progress-bar" id="budgetProgressBar"></div>
+          </div>
+        </div>
+
+        <!-- Gastos list -->
+        <div class="gastos-list" id="gastosList">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ MODALS ═══ -->
+
+  <!-- Add/Edit Gasto Modal -->
+  <div class="modal-overlay hidden" id="gastoModal" role="dialog" aria-modal="true" aria-labelledby="gastoModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="gastoModalTitle">Adicionar Gasto</h3>
+        <button class="modal-close" id="closeGastoModal" aria-label="Fechar">✕</button>
+      </div>
+      <form id="gastoForm" class="modal-form" novalidate>
+        <input type="hidden" id="gastoId" />
+        <input type="hidden" id="gastoCategoriaId" />
+
+        <div class="form-group">
+          <label for="gastoDescricao">Descrição *</label>
+          <input type="text" id="gastoDescricao" placeholder="Ex: Sinal do buffet" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="gastoValor">Valor (R$) *</label>
+            <input type="number" id="gastoValor" placeholder="0,00" step="0.01" min="0" required />
+          </div>
+          <div class="form-group">
+            <label for="gastoPago">Status</label>
+            <select id="gastoPago">
+              <option value="0">⏳ Pendente</option>
+              <option value="1">✅ Pago</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" id="dataGroup">
+          <label for="gastoData">Data do Pagamento</label>
+          <input type="date" id="gastoData" />
+        </div>
+
+        <div class="form-group">
+          <label for="gastoNotas">Notas</label>
+          <textarea id="gastoNotas" rows="2" placeholder="Observações, contato, etc."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancelGasto">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="saveGasto">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Category Modal -->
+  <div class="modal-overlay hidden" id="catModal" role="dialog" aria-modal="true" aria-labelledby="catModalTitle">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title" id="catModalTitle">Nova Categoria</h3>
+        <button class="modal-close" id="closeCatModal" aria-label="Fechar">✕</button>
+      </div>
+      <form id="catForm" class="modal-form" novalidate>
+        <input type="hidden" id="catId" />
+        <div class="form-row">
+          <div class="form-group form-group-icon">
+            <label for="catIcone">Ícone</label>
+            <input type="text" id="catIcone" value="💍" maxlength="4" />
+          </div>
+          <div class="form-group" style="flex:1">
+            <label for="catNome">Nome *</label>
+            <input type="text" id="catNome" placeholder="Ex: Lua de Mel" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="catOrcamento">Orçamento (R$)</label>
+          <input type="number" id="catOrcamento" placeholder="0,00" step="0.01" min="0" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancelCat">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="catSubmitBtn">Criar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Budget Modal -->
+  <div class="modal-overlay hidden" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budgetModalTitle">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title" id="budgetModalTitle">Definir Orçamento</h3>
+        <button class="modal-close" id="closeBudgetModal" aria-label="Fechar">✕</button>
+      </div>
+      <form id="budgetForm" class="modal-form">
+        <input type="hidden" id="budgetCatId" />
+        <div class="form-group">
+          <label for="budgetValor">Orçamento para <strong id="budgetCatName"></strong> (R$)</label>
+          <input type="number" id="budgetValor" placeholder="0,00" step="0.01" min="0" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancelBudget">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Delete -->
+  <div class="modal-overlay hidden" id="confirmModal" role="dialog" aria-modal="true">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">Confirmar Exclusão</h3>
+        <button class="modal-close" id="closeConfirmModal" aria-label="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage">Tem certeza que deseja excluir este item?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelConfirm">Cancelar</button>
+        <button class="btn btn-danger" id="confirmDelete">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
